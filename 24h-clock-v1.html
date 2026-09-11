@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>24 小时时钟</title>
+<style>
+  :root {
+    --text: #e6edf7;
+    --muted: #7c8aa3;
+    --accent: #f97316;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--text);
+    background: radial-gradient(circle at 50% 26%, #101a2e 0%, #05070d 60%, #01030a 100%);
+    font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(8px, 2.4vh, 26px);
+    padding: clamp(12px, 3vh, 32px);
+  }
+  .dial {
+    width: min(76vmin, 520px);
+    aspect-ratio: 1 / 1;
+    filter: drop-shadow(0 20px 55px rgba(0, 0, 0, .6));
+  }
+  .dial svg { display: block; width: 100%; height: 100%; }
+
+  .readout { display: flex; flex-direction: column; align-items: center; gap: .4em; }
+  #time {
+    font-size: clamp(28px, 6.2vmin, 58px);
+    font-weight: 250;
+    line-height: 1;
+    letter-spacing: .08em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    text-shadow: 0 0 28px rgba(120, 170, 255, .3);
+  }
+  #date {
+    font-size: clamp(11px, 1.75vmin, 15px);
+    letter-spacing: .22em;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  #zone {
+    font-size: clamp(9px, 1.4vmin, 12px);
+    letter-spacing: .3em;
+    color: #3d4a61;
+  }
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="dial">
+    <svg viewBox="0 0 400 400" role="img" aria-label="24 小时表盘：一整圈代表一天">
+      <defs>
+        <radialGradient id="face" cx="50%" cy="34%" r="76%">
+          <stop offset="0%" stop-color="#17253f" />
+          <stop offset="58%" stop-color="#0b1220" />
+          <stop offset="100%" stop-color="#060a13" />
+        </radialGradient>
+        <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#f97316" stop-opacity=".5" />
+          <stop offset="100%" stop-color="#f97316" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <circle cx="200" cy="200" r="196" fill="url(#face)" />
+      <circle cx="200" cy="200" r="193" fill="none" stroke="rgba(255,255,255,.07)" />
+
+      <g id="band"></g>
+      <circle cx="200" cy="200" r="152" fill="none" stroke="rgba(255,255,255,.07)" />
+
+      <g id="ticks"></g>
+      <g id="labels"></g>
+
+      <circle id="dayArc" cx="200" cy="200" r="188" fill="none"
+              stroke="rgba(249,115,22,.25)" stroke-width="2.5" stroke-linecap="round"
+              transform="rotate(-90 200 200)" />
+      <circle id="dayHalo" cx="200" cy="200" r="14" fill="url(#halo)" />
+      <circle id="dayDot" r="4.5" fill="var(--accent)" />
+
+      <g id="hands">
+        <rect id="handHour"   x="194" y="112" width="12" height="112" rx="6" fill="#e6edf7" />
+        <rect id="handMinute" x="197" y="76"  width="6"  height="152" rx="3" fill="#9fb0c9" />
+        <rect id="handSecond" x="199" y="50"  width="2"  height="190" rx="1" fill="var(--accent)" />
+        <circle r="7"   cx="200" cy="200" fill="var(--accent)" />
+        <circle r="2.6" cx="200" cy="200" fill="#0b1220" />
+      </g>
+    </svg>
+  </div>
+
+  <div class="readout">
+    <div id="time">--:--:--</div>
+    <div id="date">载入中…</div>
+    <div id="zone">24H · 本地时间</div>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const CX = 200, CY = 200;
+  const R_OUT = 180, R_IN = 158;      // 昼夜色带
+  const R_TICK = 150, R_TICK_HOUR = 139, R_TICK_QUARTER = 145;
+  const R_NUM = 123;
+  const R_ARC = 188;
+
+  const svgEl = (name, attrs) => {
+    const node = document.createElementNS(NS, name);
+    for (const key in attrs) node.setAttribute(key, attrs[key]);
+    return node;
+  };
+  // 角度以正上方为 0°，顺时针增长
+  const pt = (deg, r) => {
+    const a = (deg - 90) * Math.PI / 180;
+    return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+  };
+  const round = n => Math.round(n * 100) / 100;
+
+  const band = document.getElementById('band');
+  const ticks = document.getElementById('ticks');
+  const labels = document.getElementById('labels');
+  const handHour = document.getElementById('handHour');
+  const handMinute = document.getElementById('handMinute');
+  const handSecond = document.getElementById('handSecond');
+  const dayArc = document.getElementById('dayArc');
+  const dayDot = document.getElementById('dayDot');
+  const dayHalo = document.getElementById('dayHalo');
+  const timeEl = document.getElementById('time');
+  const dateEl = document.getElementById('date');
+
+  // 时段底色：深夜偏蓝、白天偏暖、黄昏偏橙
+  const tint = h => (h >= 6 && h < 18) ? 'rgba(250,204,21,.07)'
+                  : (h >= 18 && h < 22) ? 'rgba(249,115,22,.06)'
+                  : 'rgba(59,130,246,.09)';
+
+  for (let h = 0; h < 24; h++) {
+    const a1 = h * 15, a2 = (h + 1) * 15;
+    const [x1, y1] = pt(a1, R_OUT), [x2, y2] = pt(a2, R_OUT);
+    const [x3, y3] = pt(a2, R_IN), [x4, y4] = pt(a1, R_IN);
+    band.appendChild(svgEl('path', {
+      d: `M${round(x1)} ${round(y1)}A${R_OUT} ${R_OUT} 0 0 1 ${round(x2)} ${round(y2)}`
+       + `L${round(x3)} ${round(y3)}A${R_IN} ${R_IN} 0 0 0 ${round(x4)} ${round(y4)}Z`,
+      fill: tint(h)
+    }));
+  }
+
+  // 刻度：每小时长刻度，每 15 分钟短刻度
+  for (let q = 0; q < 96; q++) {
+    const deg = q * 3.75;
+    const isHour = q % 4 === 0;
+    const rIn = isHour ? R_TICK_HOUR : R_TICK_QUARTER;
+    const [x1, y1] = pt(deg, R_TICK);
+    const [x2, y2] = pt(deg, rIn);
+    ticks.appendChild(svgEl('line', {
+      x1: round(x1), y1: round(y1), x2: round(x2), y2: round(y2),
+      stroke: isHour ? 'rgba(148,163,184,.5)' : 'rgba(100,116,139,.28)',
+      'stroke-width': isHour ? 3 : 1.4,
+      'stroke-linecap': 'round'
+    }));
+  }
+
+  // 24 个小时数字
+  for (let h = 0; h < 24; h++) {
+    const [x, y] = pt(h * 15, R_NUM);
+    const major = h % 6 === 0;
+    const text = svgEl('text', {
+      x: round(x), y: round(y),
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+      'font-size': major ? 19 : 14.5,
+      'font-weight': major ? 600 : 400,
+      fill: major ? '#e6edf7' : '#93a3ba',
+      'font-family': 'ui-sans-serif, system-ui, sans-serif'
+    });
+    text.textContent = String(h);
+    labels.appendChild(text);
+  }
+
+  dayArc.setAttribute('stroke-dasharray', `0 ${2 * Math.PI * R_ARC}`);
+
+  const pad = n => String(n).padStart(2, '0');
+  const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  const CIRC = 2 * Math.PI * R_ARC;
+  let lastTime = '';
+
+  function render() {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes();
+    const s = now.getSeconds() + now.getMilliseconds() / 1000;
+    const minuteF = m + s / 60;
+    const hourF = h + minuteF / 60;
+
+    const rot = (node, deg) => node.setAttribute('transform', `rotate(${deg.toFixed(3)} ${CX} ${CY})`);
+    rot(handHour, hourF * 15);        // 360° / 24h
+    rot(handMinute, minuteF * 6);     // 360° / 60min
+    rot(handSecond, s * 6);           // 360° / 60s
+
+    const frac = hourF / 24;
+    dayArc.setAttribute('stroke-dasharray', `${round(CIRC * frac)} ${round(CIRC)}`);
+    const [dx, dy] = pt(hourF * 15, R_ARC);
+    dayDot.setAttribute('cx', round(dx));
+    dayDot.setAttribute('cy', round(dy));
+    dayHalo.setAttribute('cx', round(dx));
+    dayHalo.setAttribute('cy', round(dy));
+
+    const stamp = `${pad(h)}:${pad(m)}:${pad(now.getSeconds())}`;
+    if (stamp !== lastTime) {
+      lastTime = stamp;
+      timeEl.textContent = stamp;
+      document.title = `${stamp} · 24 小时时钟`;
+      dateEl.textContent =
+        `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEK[now.getDay()]}`;
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
