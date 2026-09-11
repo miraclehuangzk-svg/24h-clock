@@ -8,56 +8,193 @@
   :root {
     --text: #e6edf7;
     --muted: #7c8aa3;
+    --dim: #55647d;
     --accent: #f97316;
+    --line: rgba(255, 255, 255, .08);
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     margin: 0;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow-x: hidden;
     color: var(--text);
-    background: radial-gradient(circle at 50% 26%, #101a2e 0%, #05070d 60%, #01030a 100%);
+    background: radial-gradient(circle at 50% 22%, #101a2e 0%, #05070d 58%, #01030a 100%);
     font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+
   .stage {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: center;
-    gap: clamp(8px, 2.4vh, 26px);
-    padding: clamp(12px, 3vh, 32px);
+    justify-content: center;
+    gap: clamp(24px, 5vw, 64px);
+    padding: clamp(16px, 3vh, 40px);
   }
+
+  /* ── 表盘 ───────────────────────────── */
   .dial {
-    width: min(76vmin, 520px);
+    width: min(58vmin, 440px);
     aspect-ratio: 1 / 1;
     filter: drop-shadow(0 20px 55px rgba(0, 0, 0, .6));
   }
   .dial svg { display: block; width: 100%; height: 100%; }
 
-  .readout { display: flex; flex-direction: column; align-items: center; gap: .4em; }
+  /* ── 右侧面板 ───────────────────────── */
+  .panel {
+    width: min(360px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.4vh, 24px);
+  }
+
+  .now { display: flex; flex-direction: column; gap: .3em; }
   #time {
-    font-size: clamp(28px, 6.2vmin, 58px);
+    font-size: clamp(30px, 4.6vmin, 46px);
     font-weight: 250;
     line-height: 1;
-    letter-spacing: .08em;
+    letter-spacing: .07em;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
     text-shadow: 0 0 28px rgba(120, 170, 255, .3);
   }
   #date {
-    font-size: clamp(11px, 1.75vmin, 15px);
-    letter-spacing: .22em;
+    font-size: clamp(11px, 1.7vmin, 14px);
+    letter-spacing: .2em;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
-  #zone {
-    font-size: clamp(9px, 1.4vmin, 12px);
-    letter-spacing: .3em;
-    color: #3d4a61;
+
+  /* ── 月历 ───────────────────────────── */
+  .cal {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 14px 10px;
+    background: rgba(255, 255, 255, .022);
+    backdrop-filter: blur(2px);
+  }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .cal-title {
+    font-size: 14px;
+    letter-spacing: .14em;
+    font-variant-numeric: tabular-nums;
+  }
+  .nav {
+    width: 28px;
+    height: 28px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .nav:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
+  .nav:active { transform: translateY(1px); }
+
+  .cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-dow span {
+    text-align: center;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    color: var(--dim);
+    padding-bottom: 7px;
+  }
+  .cal-grid { gap: 2px; }
+  .cell {
+    height: clamp(26px, 3.5vh, 34px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    font-size: clamp(11.5px, 1.7vmin, 13.5px);
+    font-variant-numeric: tabular-nums;
+    color: #c3cfe0;
+  }
+  .cell.other { color: #3a465c; }
+  .cell.today {
+    background: var(--accent);
+    color: #0b1220;
+    font-weight: 650;
+    box-shadow: 0 0 20px rgba(249, 115, 22, .45);
+  }
+
+  .cal-foot { display: flex; justify-content: flex-end; padding-top: 8px; }
+  .ghost {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 4px 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .12em;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .ghost:hover { background: rgba(255, 255, 255, .06); color: var(--text); }
+  .ghost.is-current { opacity: .35; pointer-events: none; }
+
+  /* ── 年度进度 ───────────────────────── */
+  .stats { display: flex; flex-direction: column; gap: 8px; }
+  .stat-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 11.5px;
+    letter-spacing: .14em;
+    color: var(--muted);
+  }
+  .stat-row .v { color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  .bar {
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, .07);
+    overflow: hidden;
+  }
+  .bar i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #3b82f6, var(--accent));
+    transition: width .5s ease;
+  }
+  .stat-sub {
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ver {
+    position: fixed;
+    right: 14px;
+    bottom: 12px;
+    font-size: 10px;
+    letter-spacing: .22em;
+    color: #2b3547;
+    user-select: none;
+  }
+
+  @media (max-width: 880px) {
+    .stage { flex-direction: column; gap: 28px; }
+    .dial { width: min(74vmin, 400px); }
   }
 </style>
 </head>
@@ -81,6 +218,7 @@
       <circle cx="200" cy="200" r="193" fill="none" stroke="rgba(255,255,255,.07)" />
 
       <g id="band"></g>
+      <g id="win"></g>
       <circle cx="200" cy="200" r="152" fill="none" stroke="rgba(255,255,255,.07)" />
 
       <g id="ticks"></g>
@@ -102,12 +240,34 @@
     </svg>
   </div>
 
-  <div class="readout">
-    <div id="time">--:--:--</div>
-    <div id="date">载入中…</div>
-    <div id="zone">24H · 本地时间</div>
-  </div>
+  <aside class="panel">
+    <div class="now">
+      <div id="time">--:--:--</div>
+      <div id="date">载入中…</div>
+    </div>
+
+    <section class="cal">
+      <header class="cal-head">
+        <button class="nav" id="prevMonth" type="button" aria-label="上个月">‹</button>
+        <div class="cal-title" id="calTitle">—</div>
+        <button class="nav" id="nextMonth" type="button" aria-label="下个月">›</button>
+      </header>
+      <div class="cal-dow" id="calDow"></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <footer class="cal-foot">
+        <button class="ghost" id="todayBtn" type="button">回到今天</button>
+      </footer>
+    </section>
+
+    <section class="stats">
+      <div class="stat-row"><span>本年度进度</span><span class="v" id="yearPct">--.-%</span></div>
+      <div class="bar"><i id="yearBar"></i></div>
+      <div class="stat-sub" id="yearSub">第 -- 天 / 共 -- 天</div>
+    </section>
+  </aside>
 </main>
+
+<div class="ver">v2.0</div>
 
 <script>
 (() => {
@@ -115,10 +275,11 @@
 
   const NS = 'http://www.w3.org/2000/svg';
   const CX = 200, CY = 200;
-  const R_OUT = 180, R_IN = 158;      // 昼夜色带
+  const R_OUT = 180, R_IN = 158;        // 昼夜色带
   const R_TICK = 150, R_TICK_HOUR = 139, R_TICK_QUARTER = 145;
-  const R_NUM = 123;
-  const R_ARC = 188;
+  const R_NUM = 123;                    // 数字半径
+  const R_ARC = 188;                    // 日进度弧
+  const WIN = { a1: 165, a2: 195, rOut: 184, rIn: 154, rText: 169 };  // 日历窗
 
   const svgEl = (name, attrs) => {
     const node = document.createElementNS(NS, name);
@@ -131,8 +292,16 @@
     return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
   };
   const round = n => Math.round(n * 100) / 100;
+  // 环形扇区路径，用于昼夜色带与日历窗
+  const sector = (a1, a2, rOut, rIn) => {
+    const [x1, y1] = pt(a1, rOut), [x2, y2] = pt(a2, rOut);
+    const [x3, y3] = pt(a2, rIn), [x4, y4] = pt(a1, rIn);
+    return `M${round(x1)} ${round(y1)}A${rOut} ${rOut} 0 0 1 ${round(x2)} ${round(y2)}`
+         + `L${round(x3)} ${round(y3)}A${rIn} ${rIn} 0 0 0 ${round(x4)} ${round(y4)}Z`;
+  };
 
   const band = document.getElementById('band');
+  const win = document.getElementById('win');
   const ticks = document.getElementById('ticks');
   const labels = document.getElementById('labels');
   const handHour = document.getElementById('handHour');
@@ -143,30 +312,55 @@
   const dayHalo = document.getElementById('dayHalo');
   const timeEl = document.getElementById('time');
   const dateEl = document.getElementById('date');
+  const calDow = document.getElementById('calDow');
+  const calGrid = document.getElementById('calGrid');
+  const calTitle = document.getElementById('calTitle');
+  const todayBtn = document.getElementById('todayBtn');
+  const yearPct = document.getElementById('yearPct');
+  const yearBar = document.getElementById('yearBar');
+  const yearSub = document.getElementById('yearSub');
 
+  /* ── 表盘静态部分：色带 / 日历窗 / 刻度 / 数字 ── */
   // 时段底色：深夜偏蓝、白天偏暖、黄昏偏橙
   const tint = h => (h >= 6 && h < 18) ? 'rgba(250,204,21,.07)'
                   : (h >= 18 && h < 22) ? 'rgba(249,115,22,.06)'
                   : 'rgba(59,130,246,.09)';
 
   for (let h = 0; h < 24; h++) {
-    const a1 = h * 15, a2 = (h + 1) * 15;
-    const [x1, y1] = pt(a1, R_OUT), [x2, y2] = pt(a2, R_OUT);
-    const [x3, y3] = pt(a2, R_IN), [x4, y4] = pt(a1, R_IN);
     band.appendChild(svgEl('path', {
-      d: `M${round(x1)} ${round(y1)}A${R_OUT} ${R_OUT} 0 0 1 ${round(x2)} ${round(y2)}`
-       + `L${round(x3)} ${round(y3)}A${R_IN} ${R_IN} 0 0 0 ${round(x4)} ${round(y4)}Z`,
+      d: sector(h * 15, (h + 1) * 15, R_OUT, R_IN),
       fill: tint(h)
     }));
   }
+
+  // 日历窗：开在表盘正下方（即 12 点方向），指针扫不到
+  win.appendChild(svgEl('path', {
+    d: sector(WIN.a1, WIN.a2, WIN.rOut, WIN.rIn),
+    fill: 'rgba(4,7,14,.92)',
+    stroke: 'rgba(255,255,255,.13)',
+    'stroke-width': 1.2
+  }));
+  const [wx, wy] = pt(180, WIN.rText);
+  const dayNum = svgEl('text', {
+    id: 'dayNum',
+    x: round(wx), y: round(wy),
+    'text-anchor': 'middle',
+    'dominant-baseline': 'central',
+    'font-size': 26,
+    'font-weight': 600,
+    fill: '#e6edf7',
+    'font-variant-numeric': 'tabular-nums',
+    'font-family': 'ui-sans-serif, system-ui, sans-serif'
+  });
+  dayNum.textContent = '--';
+  win.appendChild(dayNum);
 
   // 刻度：每小时长刻度，每 15 分钟短刻度
   for (let q = 0; q < 96; q++) {
     const deg = q * 3.75;
     const isHour = q % 4 === 0;
-    const rIn = isHour ? R_TICK_HOUR : R_TICK_QUARTER;
     const [x1, y1] = pt(deg, R_TICK);
-    const [x2, y2] = pt(deg, rIn);
+    const [x2, y2] = pt(deg, isHour ? R_TICK_HOUR : R_TICK_QUARTER);
     ticks.appendChild(svgEl('line', {
       x1: round(x1), y1: round(y1), x2: round(x2), y2: round(y2),
       stroke: isHour ? 'rgba(148,163,184,.5)' : 'rgba(100,116,139,.28)',
@@ -194,10 +388,77 @@
 
   dayArc.setAttribute('stroke-dasharray', `0 ${2 * Math.PI * R_ARC}`);
 
-  const pad = n => String(n).padStart(2, '0');
+  /* ── 月历 ── */
   const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  for (const d of WEEK) {
+    const span = document.createElement('span');
+    span.textContent = d;
+    calDow.appendChild(span);
+  }
+
+  const now0 = new Date();
+  let viewYear = now0.getFullYear();
+  let viewMonth = now0.getMonth();       // 0–11
+  let lastDayKey = '';
+
+  const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
+  function renderCalendar() {
+    const now = new Date();
+    const todayKey = dayKey(now);
+
+    calTitle.textContent = `${viewYear} 年 ${viewMonth + 1} 月`;
+    todayBtn.classList.toggle('is-current',
+      viewYear === now.getFullYear() && viewMonth === now.getMonth());
+
+    calGrid.textContent = '';
+    const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+    for (let i = 0; i < 42; i++) {
+      // Date 会自动归一化越界的月/日，跨月补格无需手算
+      const cell = new Date(viewYear, viewMonth, i - firstDow + 1);
+      const el = document.createElement('div');
+      el.className = 'cell'
+        + (cell.getMonth() === viewMonth ? '' : ' other')
+        + (dayKey(cell) === todayKey ? ' today' : '');
+      el.textContent = String(cell.getDate());
+      calGrid.appendChild(el);
+    }
+  }
+
+  function shiftMonth(delta) {
+    const d = new Date(viewYear, viewMonth + delta, 1);
+    viewYear = d.getFullYear();
+    viewMonth = d.getMonth();
+    renderCalendar();
+  }
+  document.getElementById('prevMonth').addEventListener('click', () => shiftMonth(-1));
+  document.getElementById('nextMonth').addEventListener('click', () => shiftMonth(1));
+  todayBtn.addEventListener('click', () => {
+    const now = new Date();
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth();
+    renderCalendar();
+  });
+
+  /* ── 每秒更新 ── */
+  const pad = n => String(n).padStart(2, '0');
   const CIRC = 2 * Math.PI * R_ARC;
-  let lastTime = '';
+  const DAY_MS = 86400000;
+  let lastStamp = '';
+
+  function updateStats(now) {
+    const y = now.getFullYear();
+    const yearStart = new Date(y, 0, 1);
+    const yearEnd = new Date(y + 1, 0, 1);
+    const totalDays = Math.round((yearEnd - yearStart) / DAY_MS);
+    // 用 round 抵消夏令时造成的 ±1 小时偏移
+    const doy = Math.round((new Date(y, now.getMonth(), now.getDate()) - yearStart) / DAY_MS) + 1;
+    const pct = (now - yearStart) / (yearEnd - yearStart) * 100;
+
+    yearPct.textContent = `${pct.toFixed(1)}%`;
+    yearBar.style.width = `${pct}%`;
+    yearSub.textContent = `第 ${doy} 天 / 共 ${totalDays} 天 · 距年底还有 ${totalDays - doy} 天`;
+  }
 
   function render() {
     const now = new Date();
@@ -220,17 +481,27 @@
     dayHalo.setAttribute('cy', round(dy));
 
     const stamp = `${pad(h)}:${pad(m)}:${pad(now.getSeconds())}`;
-    if (stamp !== lastTime) {
-      lastTime = stamp;
+    if (stamp !== lastStamp) {
+      lastStamp = stamp;
       timeEl.textContent = stamp;
       document.title = `${stamp} · 24 小时时钟`;
       dateEl.textContent =
         `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEK[now.getDay()]}`;
+      dayNum.textContent = String(now.getDate());
+      updateStats(now);
+
+      // 跨天时刷新日历高亮，但不打断用户正在翻看的月份
+      const key = dayKey(now);
+      if (key !== lastDayKey) {
+        lastDayKey = key;
+        renderCalendar();
+      }
     }
 
     requestAnimationFrame(render);
   }
 
+  renderCalendar();
   requestAnimationFrame(render);
 })();
 </script>
